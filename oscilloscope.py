@@ -3,61 +3,49 @@ import ssd1306
 import time
 from machine import ADC, Pin, I2C
 
-#import gfx
 
-
-# --- Configuration ---
+# Display size
 DISPLAY_WIDTH = 128
 DISPLAY_HEIGHT = 64
 
 
+# Basic Osilliscope using Raspberry Pi Pico and
+# SSD1306 128x64 oled
+# 
+
 # Configure I2C communication (adjust pins based on your board)
-# Example for Raspberry Pi Pico
-# i2c = I2C(0, sda=Pin(0), scl=Pin(1), freq=400000)
-# Example for ESP32
-# i2c = I2C(scl=Pin(22), sda=Pin(21), freq=400000)
 i2c = I2C(0, sda=Pin(0), scl=Pin(1), freq=400000) # Update with your specific pins
 
 # Initialize the display
 oled = ssd1306.SSD1306_I2C(DISPLAY_WIDTH, DISPLAY_HEIGHT, i2c)
 
-# graphics = gfx.GFX(DISPLAY_WIDTH, DISPLAY_HEIGHT, oled.pixel)
-
-
-# Initialize the microphone analog input (adjust pin as necessary, e.g., GP26 for Pico ADC0)
+# Initialize the microphone analog input ADC on pin 28
 mic_pin = 28
 mic = ADC(Pin(mic_pin))
- 
- 
- 
- 
-# Define grid coordinates
 
+
+# Genrate grid coordinates
 coordinate_list = []
 for x_coord in range(8,128,8):  # X range from 10 to 19
     for y_coord in range(8,64,8):  # Y range from 10 to 19
         coordinate_list.append((x_coord, y_coord)) # Store coordinates as tuples
         
-        
-def plot_coordinates(coordinates, display_obj):
-    display_obj.fill(0) # Clear the display buffer (fill with black)
+    
+
+# Define function to display grid and surrounding rectangle 
+def plot_coordinates(coordinates, oled):
+    oled.fill(0) # Clear the display buffer (fill with black)
     
     for coord in coordinates:
         x, y = coord
         # Use the pixel() method: display.pixel(x, y, color)
         # Color can be 0 (off/black) or 1 (on/white)
         if 0 <= x < DISPLAY_WIDTH and 0 <= y < DISPLAY_HEIGHT: # Basic boundary check
-            display_obj.pixel(x, y, 1) # Set the pixel to white
-    oled.rect(0,0,128,64,1)        
-#     display_obj.show() # Update the physical display with the buffer's contents
-
-# Run the plot function
-#print(f"Plotting {len(coordinate_list)} pixels...")
-plot_coordinates(coordinate_list, oled)
+            oled.pixel(x, y, 1) # Set the pixel to white
+    oled.rect(0,0,128,64,1)
+    #oled.show()
 
 
- 
-# --- Waveform Plotting Function ---
 def plot_waveform():
     oled.fill(0) # Clear the display buffer
     plot_coordinates(coordinate_list, oled)
@@ -84,20 +72,16 @@ def plot_waveform():
     for i in range(1, num_samples):
         # Draw a line from the previous point (x-1) to the current point (x)
         oled.line(i - 1, points[i - 1], i, points[i], 1) #
-#         time.sleep(0.5)
-    # Update the physical display
-    oled.show()
 
 
 
 
 
+        
+# Main Loop
 
-
-
-# --- Main Loop ---
 while True:
     plot_waveform()
     # Control update speed
     time.sleep(0.05)
-    
+    oled.show()
